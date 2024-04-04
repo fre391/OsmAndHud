@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <net.osmand.osmandapidemo.HudCanvasView
+            android:id="@+id/hudCanvasView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="25dp"
+            android:background="#22999999"
+            >
+
+            <ImageButton
+                android:id="@+id/switchOrientationButton"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#FFFFFFFF"
+                android:background="@android:color/transparent"
+                android:src="@drawable/rotate"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                />
+
+            <ImageButton
+                android:id="@+id/switchFlipButton"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#FFFFFFFF"
+                android:background="@android:color/transparent"
+                android:src="@drawable/flip"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                />
+
+            <ImageButton
+                android:id="@+id/volumeOnButton"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#FFFFFFFF"
+                android:background="@android:color/transparent"
+                android:src="@drawable/volume_on"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                />
+        </LinearLayout>
+
+    </FrameLayout>
+
+</RelativeLayout>
