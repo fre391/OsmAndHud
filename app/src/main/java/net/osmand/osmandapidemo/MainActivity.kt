@@ -47,17 +47,15 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
             mOsmAndHelper = OsmAndHelper(this, REQUEST_OSMAND_API, this)
             mAidlHelper = OsmAndAidlHelper(this.application, this)
             mAidlHelper!!.setOsmandInitializedListener {
-                runOnUiThread {
-                    Toast.makeText(this, "OsmAnd HUD now initialized.", Toast.LENGTH_SHORT).show()
-                    mAidlHelper!!.setNavigationInfoUpdateListener(object : OsmAndAidlHelper.NavigationInfoUpdateListener {
-                        override fun onNavigationInfoUpdate(directionInfo: ADirectionInfo?) {
-                            runOnUiThread {
-                                mOsmAndHelper!!.getInfo()
-                            }
+                Toast.makeText(this, "OsmAnd HUD now initialized.", Toast.LENGTH_SHORT).show()
+                mAidlHelper!!.setNavigationInfoUpdateListener(object : OsmAndAidlHelper.NavigationInfoUpdateListener {
+                    override fun onNavigationInfoUpdate(directionInfo: ADirectionInfo?) {
+                        runOnUiThread {
+                            mOsmAndHelper!!.getInfo()
                         }
-                    })
-                    callbackKeys[KEY_NAV_INFO_LISTENER] = mAidlHelper!!.registerForNavigationUpdates(true, 0)
-                }
+                    }
+                })
+                callbackKeys[KEY_NAV_INFO_LISTENER] = mAidlHelper!!.registerForNavigationUpdates(true, 0)
             }
             isNavigationUpdatesRegistered = true
         }
