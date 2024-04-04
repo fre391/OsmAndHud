@@ -5,6 +5,8 @@ import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -113,11 +115,10 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
     private fun requestLocationUpdates() {
         locationHelper.startLocationUpdates { location ->
             //ToneGenerator(AudioManager.STREAM_MUSIC, 50).startTone(ToneGenerator.TONE_PROP_BEEP, 200)
-            //Log.i("mf", "Location: ${location.latitude}, ${location.longitude}")
-            //Log.i("mf", "Speed: ${location.speed*3.6f}")
-
+            Log.i("mf", "Location: ${location.latitude}, ${location.longitude}")
+            Log.i("mf", "Speed: ${location.speed*3.6f}")
             hudData?.updateLocation(location.latitude, location.longitude, location.speed)
-            hudCanvasView?.setData(hudData?.getNavigationData())
+            hudCanvasView?.setData(hudData?.getData())
         }
     }
 
@@ -135,6 +136,7 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                         for (key in extras.keySet()) {
                             val value = extras.get(key)
                             hudData?.updateData(key, value.toString())
+                            //hudCanvasView?.setData(hudData?.getData())
                         }
                     }
                 }
@@ -153,5 +155,5 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
     override fun osmandMissing() {
         OsmAndMissingDialogFragment().show(supportFragmentManager, null)
     }
-    
+
 }

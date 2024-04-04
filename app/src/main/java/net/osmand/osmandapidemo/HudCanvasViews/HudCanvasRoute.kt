@@ -43,7 +43,7 @@ class HudCanvasRoute(private val context:Context, private val parentView: HudCan
 
         navigationData = data!!
 
-        var posLatLon = PointF(250f, 200f)
+        var posLatLon = PointF(250f, 2200f)
         val posEta = if (isLandscape) PointF(250f, 250f) else PointF(220f, 400f)
         val posTimeDistanceLeft = if (isLandscape) PointF(600f, 250f) else PointF(600f, 400f)
         val posSpeedLimit = if (isLandscape) PointF(250f, 600f) else PointF(200f, 750f)
@@ -64,22 +64,22 @@ class HudCanvasRoute(private val context:Context, private val parentView: HudCan
                 }
             }
 
-            navigationData["speed"]?.toString()?.let { speed->
+            navigationData["speed"]?.toString()?.let { speed ->
                 if (speed != "NaN") {
                     val strSpeed = speed + "km/h"
                     drawText(strSpeed, posSpeed.x, posSpeed.y, paintText)
                 }
             }
 
-            navigationData["speedLimit"]?.toString()?.let {speedLimit ->
-                if (speedLimit != "NaN") drawSpeedLimit( speedLimit, posSpeedLimit)
+            navigationData["speedLimit"]?.toString()?.let { speedLimit ->
+                if (speedLimit != "NaN") drawSpeedLimit(speedLimit, posSpeedLimit)
             }
 
-            navigationData["speedLimit"]?.toString()?.let {speedLimit ->
-                navigationData["speed"]?.toString()?.let {speed ->
-                    if (speed != "NaN" && speedLimit != "NaN" ){
-                        if (speed.toFloat() >= speedLimit.toFloat()*1.1f) {
-                            if (warning != "speedWarning" ){
+            navigationData["speedLimit"]?.toString()?.let { speedLimit ->
+                navigationData["speed"]?.toString()?.let { speed ->
+                    if (speed != "NaN" && speedLimit != "NaN") {
+                        if (speed.toFloat() >= speedLimit.toFloat() * 1.1f) {
+                            if (warning != "speedWarning") {
                                 warning = "speedWarning"
                                 navigationData["speedWarning"] = "true"
                             }
@@ -95,11 +95,22 @@ class HudCanvasRoute(private val context:Context, private val parentView: HudCan
             if (maxheight != "NaN" || maxwidth != "NaN" || maxweight != "NaN") {
                 val paint = Paint(paintText)
                 paint.textSize = 80f
-                drawText("(w:${maxwidth} h:${maxheight} m:${maxweight})", posMaxLimits.x, posMaxLimits.y, paint)
+                drawText(
+                    "(w:${maxwidth} h:${maxheight} m:${maxweight})",
+                    posMaxLimits.x,
+                    posMaxLimits.y,
+                    paint
+                )
             }
 
-            navigationData["eta"]?.toString()?.let {eta ->
+            navigationData["eta"]?.toString()?.let { eta ->
                 drawEta(eta, posEta)
+            }
+
+            navigationData["lat"]?.toString()?.let { lat ->
+                navigationData["lon"]?.toString()?.let { lon ->
+                drawLatLon("${lat} / ${lon}", posLatLon)
+                }
             }
 
             navigationData["time_distance_left"]?.toString()?.let {time_distance_left->
@@ -250,6 +261,7 @@ class HudCanvasRoute(private val context:Context, private val parentView: HudCan
     private fun Canvas.drawLatLon(value:String, center:PointF){
         val paint = Paint(paintText)
         paint.textSize = 60f
+        paint.color = Color.DKGRAY
         drawText(value, center.x, center.y, paint)
     }
 

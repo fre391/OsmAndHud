@@ -27,6 +27,7 @@ class HudCanvasView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+
         canvas.apply {
             drawColor(Color.BLACK)
 
@@ -35,7 +36,7 @@ class HudCanvasView @JvmOverloads constructor(
                 distance_left = time_distance_left
             }
 
-            if (navigationData.size < 10){
+            if (navigationData.size < 10 ){
                 switchToWelcome()
             } else if (distance_left == "0m" ) {
                 switchToArrived()
