@@ -153,29 +153,5 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
     override fun osmandMissing() {
         OsmAndMissingDialogFragment().show(supportFragmentManager, null)
     }
-
-    private fun resultCodeStr(resultCode: Int): String {
-        when (resultCode) {
-            Activity.RESULT_OK -> return "OK"
-            Activity.RESULT_CANCELED -> return "Canceled"
-            Activity.RESULT_FIRST_USER -> return "First user"
-            OsmAndHelper.RESULT_CODE_ERROR_UNKNOWN -> return "Unknown error"
-            OsmAndHelper.RESULT_CODE_ERROR_NOT_IMPLEMENTED -> return "Feature is not implemented"
-            OsmAndHelper.RESULT_CODE_ERROR_GPX_NOT_FOUND -> return "GPX not found"
-            OsmAndHelper.RESULT_CODE_ERROR_INVALID_PROFILE -> return "Invalid profile"
-            OsmAndHelper.RESULT_CODE_ERROR_PLUGIN_INACTIVE -> return "Plugin inactive"
-            OsmAndHelper.RESULT_CODE_ERROR_EMPTY_SEARCH_QUERY -> return "Empty search query"
-            OsmAndHelper.RESULT_CODE_ERROR_SEARCH_LOCATION_UNDEFINED -> return "Search location undefined"
-            OsmAndHelper.RESULT_CODE_ERROR_QUICK_ACTION_NOT_FOUND -> return "Quick action not found"
-        }
-        return "" + resultCode
-    }
-
-    private fun showOsmandInfoDialog(infoText: String) {
-        val args = Bundle()
-        args.putString(OsmAndInfoDialog.INFO_KEY, infoText)
-        val infoDialog = OsmAndInfoDialog()
-        infoDialog.arguments = args
-        supportFragmentManager.beginTransaction().add(infoDialog, null).commitAllowingStateLoss()
-    }
+    
 }
