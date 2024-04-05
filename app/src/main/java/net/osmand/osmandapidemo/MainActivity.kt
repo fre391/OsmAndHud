@@ -128,14 +128,28 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_OSMAND_API) {
-            if (data != null) {
-                val extras = data.extras
-                if (extras != null && extras.size() > 0) {
-                    coroutineScopeCustom2.launch {
-                        for (key in extras.keySet()) {
-                            val value = extras.get(key)
-                            hudData?.updateNavigationData(key, value.toString())
-                        }
+            if (data == null) {
+                Log.e("onActivityResult", "onActivityResult: data is null")
+                return
+            }
+            val extras = data.extras ?: run {
+                Log.e("onActivityResult", "onActivityResult: extras is null")
+                return
+            }
+            if (extras.size() == 0) {
+                Log.e("onActivityResult", "onActivityResult: extras has no data")
+                return
+            }
+            coroutineScopeCustom2.launch {
+                for (key in extras.keySet()) {
+                    val value = extras[key] ?: run {
+                        Log.e("onActivityResult", "onActivityResult: key $key has no value")
+                        continue
+                    }
+                    try {
+                        hudData?.updateNavigationData(key, value.toString())
+                    } catch (e: Exception) {
+                        Log.e("onActivityResult", "onActivityResult: error updating NavigationData", e)
                     }
                 }
             }
