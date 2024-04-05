@@ -14,9 +14,7 @@ import android.view.WindowManager
 import android.widget.*
 
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import main.java.net.osmand.osmandapidemo.dialogs.*
 import net.osmand.aidlapi.navigation.ADirectionInfo
 
@@ -31,7 +29,11 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
     var mOsmAndHelper: OsmAndHelper? = null
     private var mAidlHelper: OsmAndAidlHelper? = null
     private val callbackKeys = mutableMapOf<String, Long>()
-    private var isNavigationUpdatesRegistered = false
+    private var isOsmandInitialzed = false
+    private var isOsmandInProcess = false
+
+    private val coroutineScopeCustom1 = CoroutineScope(newSingleThreadContext("CustomThread1"))
+    private val coroutineScopeCustom2 = CoroutineScope(newSingleThreadContext("CustomThread2"))
 
     private lateinit var locationHelper: LocationHelper
     private var hudData: HudData? = null
@@ -44,24 +46,17 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
-        if (!isNavigationUpdatesRegistered) {
+        if (!isOsmandInitialzed) {
             mOsmAndHelper = OsmAndHelper(this, REQUEST_OSMAND_API, this)
             mAidlHelper = OsmAndAidlHelper(this.application, this)
             mAidlHelper!!.setOsmandInitializedListener {
                 Toast.makeText(this, "OsmAnd HUD now initialized.", Toast.LENGTH_SHORT).show()
-                mAidlHelper!!.setNavigationInfoUpdateListener(object : OsmAndAidlHelper.NavigationInfoUpdateListener {
-                    override fun onNavigationInfoUpdate(directionInfo: ADirectionInfo?) {
-                        runOnUiThread {
-                            mOsmAndHelper!!.getInfo()
-                        }
-                    }
-                })
-                callbackKeys[KEY_NAV_INFO_LISTENER] = mAidlHelper!!.registerForNavigationUpdates(true, 0)
+                isOsmandInitialzed = true
             }
-            isNavigationUpdatesRegistered = true
         }
 
+        locationHelper = LocationHelper(this)
+        requestLocationUpdates()
 
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -72,8 +67,6 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_FULLSCREEN)
 
-        locationHelper = LocationHelper(this)
-        requestLocationUpdates()
 
         val sharedPreferences: SharedPreferences = this.getSharedPreferences("test", Context.MODE_PRIVATE)
         val editor: SharedPreferences.Editor = sharedPreferences.edit()
@@ -117,7 +110,13 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
             //ToneGenerator(AudioManager.STREAM_MUSIC, 50).startTone(ToneGenerator.TONE_PROP_BEEP, 200)
             Log.i("mf", "Location: ${location.latitude}, ${location.longitude}")
             Log.i("mf", "Speed: ${location.speed*3.6f}")
-            hudData?.updateLocation(location.latitude, location.longitude, location.speed)
+            coroutineScopeCustom1.launch {
+                hudData?.updateLocationData(location.latitude, location.longitude, location.speed)
+                if (isOsmandInitialzed && !isOsmandInProcess) {
+                    isOsmandInProcess = true
+                    mOsmAndHelper!!.getInfo()
+                }
+            }
             hudCanvasView?.setData(hudData?.getData())
         }
     }
@@ -132,21 +131,23 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
             if (data != null) {
                 val extras = data.extras
                 if (extras != null && extras.size() > 0) {
-                    GlobalScope.launch(Dispatchers.Main) {
+                    coroutineScopeCustom2.launch {
                         for (key in extras.keySet()) {
                             val value = extras.get(key)
-                            hudData?.updateData(key, value.toString())
-                            //hudCanvasView?.setData(hudData?.getData())
+                            hudData?.updateNavigationData(key, value.toString())
                         }
                     }
                 }
             }
+            isOsmandInProcess = false
         } else {
             super.onActivityResult(requestCode, resultCode, data)
         }
     }
 
     override fun onDestroy() {
+        coroutineScopeCustom1.cancel()
+        coroutineScopeCustom2.cancel()
         mAidlHelper!!.cleanupResources()
         locationHelper.stopLocationUpdates()
         super.onDestroy()

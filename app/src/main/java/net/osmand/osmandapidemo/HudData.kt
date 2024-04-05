@@ -12,24 +12,26 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.collections.HashMap
 
 class HudData(private val activity: AppCompatActivity) : OverpassAPIQueryCallback {
     var networkTaskBusy = false
-    private val mutex = Mutex()
-    val locationData = HashMap<Any, Any>()
-    val navigationData = HashMap<Any, Any>()
+    private val locationData = AtomicReference<HashMap<Any, Any>>(HashMap())
+    private val navigationData = AtomicReference<HashMap<Any, Any>>(HashMap())
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
-    fun updateData(key:String, value:String ){
+    fun updateNavigationData(key:String, value:String ){
+
+        val data = HashMap(navigationData.get())
         when (key) {
             "eta" -> {
                 val seconds = java.lang.Long.parseLong(value)
                 val etaMillis = seconds * 1000
                 val etaDate = Date(etaMillis)
                 val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-                navigationData[key] = formatter.format(etaDate)
+                data[key] = formatter.format(etaDate)
             }
             "time_distance_left" -> {
                 val distance = java.lang.Float.parseFloat(value)
@@ -43,7 +45,7 @@ class HudData(private val activity: AppCompatActivity) : OverpassAPIQueryCallbac
                     val tenMeters = (distance / 1000).toInt() * 1000
                     value = String.format("%.0f", tenMeters.toFloat()) + "m"
                 }
-                navigationData[key] = value
+                data[key] = value
             }
             "next_turn_distance" -> {
                 val distance = java.lang.Float.parseFloat(value)
@@ -57,29 +59,32 @@ class HudData(private val activity: AppCompatActivity) : OverpassAPIQueryCallbac
                     val tenMeters = (distance / 10).toInt() * 10
                     value = String.format("%.0f", tenMeters.toFloat()) + "m"
                 }
-                navigationData[key] = value
+                data[key] = value
             }
             "next_turn_angle" -> {
                 val value = java.lang.Float.parseFloat(value)
-                navigationData[key] = String.format("%.0f", value)
+                data[key] = String.format("%.0f", value)
             }
             "lat", "lon" -> {
                 //var value = java.lang.Float.parseFloat(value.toString())
                 //navigationData[key] = String.format("%.6f", value).replace(",",".")
             }
-            else -> navigationData[key] = value
+            else -> data[key] = value
         }
+        navigationData.set(data)
     }
 
-    fun updateLocation(lat:Double, lon:Double, s:Float)  {
+    fun updateLocationData(lat:Double, lon:Double, s:Float)  {
         if (!networkTaskBusy) {
             networkTaskBusy = true
 
+            val data = HashMap(locationData.get())
             val speed = s * 3.6f
-            if (speed < 10) locationData["speed"] = "NaN"
-            else locationData["speed"] = speed.toInt().toString()
-            locationData["lat"] = lat.toFloat().toString()
-            locationData["lon"] = lon.toFloat().toString()
+            if (speed < 10) data["speed"] = "NaN"
+            else data["speed"] = speed.toInt().toString()
+            data["lat"] = lat.toFloat().toString()
+            data["lon"] = lon.toFloat().toString()
+            locationData.set(data)
 
             val overpassQuery = """
                     [out:json];
@@ -108,12 +113,14 @@ class HudData(private val activity: AppCompatActivity) : OverpassAPIQueryCallbac
 
     override fun onTaskCompleted(result: String) {
         try {
-            locationData["cameraWarning"] = "false"
-            locationData["cameraSpeedLimit"] = "NaN"
-            locationData["speedLimit"] = "NaN"
-            locationData["maxheight"] = "NaN"
-            locationData["maxwidth"] = "NaN"
-            locationData["maxweight"] = "NaN"
+            val data = HashMap(locationData.get())
+
+            data["cameraWarning"] = "false"
+            data["cameraSpeedLimit"] = "NaN"
+            data["speedLimit"] = "NaN"
+            data["maxheight"] = "NaN"
+            data["maxwidth"] = "NaN"
+            data["maxweight"] = "NaN"
 
             if (result == "-1") return
             val jsonObject = JSONObject(result)
@@ -128,29 +135,31 @@ class HudData(private val activity: AppCompatActivity) : OverpassAPIQueryCallbac
                     // speed camera
                     if (tags.has("highway") && tags.has("maxspeed") ) {
                         val maxspeed = tags.getString("maxspeed")
-                        locationData["cameraWarning"] = "true"
-                        locationData["cameraSpeedLimit"] = if (maxspeed != "null") maxspeed else "NaN"
+                        data["cameraWarning"] = "true"
+                        data["cameraSpeedLimit"] = if (maxspeed != "null") maxspeed else "NaN"
                     }
                     if (tags.has("highway") && tags.has("maxheight") ) {
                         val maxheight = tags.getString("maxheight")
-                        locationData["maxheight"] = if (maxheight != "null") maxheight else "NaN"
+                        data["maxheight"] = if (maxheight != "null") maxheight else "NaN"
                     }
                     if (tags.has("highway") && tags.has("maxwidth") ) {
                         val maxwidth = tags.getString("maxwidth")
-                        locationData["maxwidth"] = if (maxwidth != "null") maxwidth else "NaN"
+                        data["maxwidth"] = if (maxwidth != "null") maxwidth else "NaN"
                     }
                     if (tags.has("highway") && tags.has("maxweight") ) {
                         val maxweight = tags.getString("maxweight")
-                        locationData["maxweight"] = if (maxweight != "null") maxweight else "NaN"
+                        data["maxweight"] = if (maxweight != "null") maxweight else "NaN"
                     }
                 } else {
                     // speed limit
                     if (tags.has("highway") && tags.has("maxspeed") ) {
                         val maxspeed = tags.getString("maxspeed")
-                        locationData["speedLimit"] = maxspeed
+                        data["speedLimit"] = maxspeed
                     }
                 }
             }
+            locationData.set(data)
+
         } catch (e: Exception) {
             Log.e("HudData", "Error parsing result: ${e.message}")
         } finally {
@@ -163,11 +172,10 @@ class HudData(private val activity: AppCompatActivity) : OverpassAPIQueryCallbac
         networkTaskBusy = false
     }
 
-    //@JvmName("getNavigationData1")
     fun getData(): HashMap<Any, Any> {
         val data = HashMap<Any, Any>()
-        data.putAll(locationData)
-        data.putAll(navigationData)
+        data.putAll(locationData.get())
+        data.putAll(navigationData.get())
         return data
     }
 }
