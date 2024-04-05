@@ -145,7 +145,7 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                 coroutineScopeCustom2.launch {
                     for (key in extras.keySet()) {
                         try {
-                            Log.e("onActivityResult", "try updating NavigationData")
+                            Log.i("onActivityResult", "try updating NavigationData")
                             val value = extras[key]
                             hudData?.updateNavigationData(key, value.toString())
                         } catch (e: Exception) {
