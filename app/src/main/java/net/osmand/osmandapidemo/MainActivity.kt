@@ -127,33 +127,34 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_OSMAND_API) {
-            if (data == null) {
-                Log.e("onActivityResult", "data is null")
-                return
-            }
-            val extras = data.extras ?: run {
-                Log.e("onActivityResult", "extras is null")
-                return
-            }
-            if (extras.size() == 0) {
-                Log.e("onActivityResult", "extras has no data")
-                return
-            }
-            coroutineScopeCustom2.launch {
-                for (key in extras.keySet()) {
-                    try {
-                        Log.e("onActivityResult", "try updating NavigationData", e)
-                        val value = extras[key]
-                        hudData?.updateNavigationData(key, value.toString())
-                    } catch (e: Exception) {
-                        Log.e("onActivityResult", "error updating NavigationData", e)
+            if (resultCode == RESULT_OK) {
+                if (data == null) {
+                    Log.e("onActivityResult", "data is null")
+                    return
+                }
+                val extras = data.extras ?: run {
+                    Log.e("onActivityResult", "extras is null")
+                    return
+                }
+                if (extras.size() == 0) {
+                    Log.e("onActivityResult", "extras has no data")
+                    return
+                }
+                coroutineScopeCustom2.launch {
+                    for (key in extras.keySet()) {
+                        try {
+                            Log.e("onActivityResult", "try updating NavigationData")
+                            val value = extras[key]
+                            hudData?.updateNavigationData(key, value.toString())
+                        } catch (e: Exception) {
+                            Log.e("onActivityResult", "error updating NavigationData")
+                        }
                     }
                 }
+                isOsmandInProcess = false
             }
-            isOsmandInProcess = false
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
         }
     }
 
